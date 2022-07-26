@@ -79,30 +79,23 @@ app.post('/signup',async function (request, response) {
         }
       }
   })
+  app.post('/forgetUser',async function (request, response) {
+    const {Email}=request.body;
+    const userFromDB = await getUserByEmail(Email);
 
-//   app.post('/askQuestions',async function (request, response) {
-//     const data =request.body;
-//      const result=await createQuestionlist(data);
-//      response.send(result);
-// })
-// app.post('/askQuestion',async function (request, response) {
-//   const data =request.body;
-//    const result=await createQuestion(data);
-//    response.send(result);
-// })
-// app.post('/createAllUsers',async function (request, response) {
-//   const data =request.body;
-//    const result=await createUserlist(data);
-//    response.send(result);
-// })
-// app.get('/getAllUsers',async function (request, response) {
-//    const result=await getUserlist();
-//    response.send(result);
-// })
-
-// app.get('/questionsList',async function (request, response) {
-//   //db.movies.find({});
-  
-//   const questions= await getAllQuestions();
-//   response.send(questions);
-//   })
+    if(!userFromDB){
+      response.status(400).send({message:"This is not a registered E-mail"});
+    }
+    else{ 
+      // check password
+      const storedPassword = userFromDB.Password;
+      const isPasswordMatch=await bcrypt.compare(Password,storedPassword);
+      if(isPasswordMatch){
+        response.send({message:"successful login"});
+        localStorage.setItem("currentUser",UserName);
+      }
+      else{
+        response.status(400).send({message:"Invalid Credential"});
+      }
+    }
+})
