@@ -25,7 +25,7 @@ async function createConnection(){
 
 export const client=await createConnection();
 
-app.listen(PORT,()=>console.log("Server started in port number:"PORT))
+app.listen(PORT,()=>console.log("Server started in port number:",PORT))
 
 async function generateHashedPassword(password){
   const NO_OF_ROUNDS = 10 ; //Number of rounds of salting
