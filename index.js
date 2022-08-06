@@ -85,7 +85,6 @@ app.post('/signup',async function (request, response) {
   app.post('/forgetPassword',async function (request, response) {
     const {Email}=request.body;
     const userFromDB = await getUserByEmail(Email);
-    console.log(userFromDB);
 
     if(!userFromDB){
       response.status(400).send({message:"This is not a registered E-mail"});
@@ -128,7 +127,6 @@ app.post('/signup',async function (request, response) {
         //Expiring date
         const expiresin = new Date();
         expiresin.setHours(expiresin.getHours() + 1);
-        console.log(expiresin);
         //store random string
         await client.db("guvi-node-app").collection("password-reset-flow-users").findOneAndUpdate({ Email: Email}, { $set: { resetPasswordToken: randomString, resetPasswordExpires: expiresin } });
         //Close the connection
@@ -144,7 +142,6 @@ app.post('/verifyToken',async function (request, response) {
   const userFromDB = await getUserById(id);
   const currTime = new Date();
   currTime.setHours(currTime.getHours());
-  console.log(userFromDB)
   try{
   if(currTime<=userFromDB.resetPasswordExpires){
     if(token===userFromDB.resetPasswordToken){
@@ -168,7 +165,6 @@ app.post('/verifyToken',async function (request, response) {
 
 app.put('/changePassword',async function (request, response) {
   const {Password,id}=request.body;
-  console.log(Password)
   // const userFromDB = await getUserById(id);
   // if(!userFromDB){
   //   response.status(400).send({message:"Invalid Credential"});
@@ -177,7 +173,6 @@ app.put('/changePassword',async function (request, response) {
   try{ 
     // check password
     const hashedPassword=await generateHashedPassword(Password);
-    console.log(hashedPassword)
     await client.db("guvi-node-app").collection("password-reset-flow-users").findOneAndUpdate({ _id: ObjectId(id)}, { $set: { Password: hashedPassword}});
     //db.users.insertOne(data);
     response.send({message:"Password updated successfully"});
