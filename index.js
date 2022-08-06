@@ -3,7 +3,10 @@ import { MongoClient } from 'mongodb';
 import dotenv from "dotenv";
 import cors from "cors";
 import bcrypt from "bcrypt";
-import {createUser,getUserByName} from "./helper.js";
+import nodemailer from "nodemailer";
+import randomstring from 'randomstring';
+import {createUser,getUserByName,getUserByEmail,getUserById} from "./helper.js";
+import { ObjectId } from "mongodb";
 dotenv.config();
 
 
@@ -72,30 +75,114 @@ app.post('/signup',async function (request, response) {
         const isPasswordMatch=await bcrypt.compare(Password,storedPassword);
         if(isPasswordMatch){
           response.send({message:"successful login"});
-          localStorage.setItem("currentUser",UserName);
+          // localStorage.setItem("currentUser",UserName);
         }
         else{
           response.status(400).send({message:"Invalid Credential"});
         }
       }
   })
-  app.post('/forgetUser',async function (request, response) {
+  app.post('/forgetPassword',async function (request, response) {
     const {Email}=request.body;
     const userFromDB = await getUserByEmail(Email);
+    console.log(userFromDB);
 
     if(!userFromDB){
       response.status(400).send({message:"This is not a registered E-mail"});
     }
     else{ 
-      // check password
-      const storedPassword = userFromDB.Password;
-      const isPasswordMatch=await bcrypt.compare(Password,storedPassword);
-      if(isPasswordMatch){
-        response.send({message:"successful login"});
-        localStorage.setItem("currentUser",UserName);
-      }
-      else{
-        response.status(400).send({message:"Invalid Credential"});
-      }
+        //generate random string
+        let randomString = randomstring.generate();
+
+        //send a mail using nodemailer
+
+        //Create Transporter
+        const linkForUser=`${process.env.FRONTEND_URL}/reset-password/${userFromDB._id}/${randomString}`
+        let transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                // type: 'OAUTH2',
+                user: process.env.MAIL_USERNAME,
+                pass: process.env.MAIL_PASSWORD,
+                // clientId: process.env.OAUTH_CLIENTID,
+                // clientSecret: process.env.OAUTH_CLIENT_SECRET,
+                // refreshToken: process.env.OAUTH_REFRESH_TOKEN
+            }
+        });
+        //Mail options
+        let mailOptions = {
+            from: 'no-reply@noreply.com',
+            to: Email,
+            subject: 'Reset Password',
+            html: `<h4>Hello User,</h4><br><p> You can reset the password by clicking the link below.</p><br><u><a href=${linkForUser}>${linkForUser}</a></u>`
+        }
+        //Send mail
+        transporter.sendMail(mailOptions, (err, data) => {
+            if (err) {
+                console.log(err);
+            }
+            else {
+                console.log('email sent successfully')
+            }
+        })
+        //Expiring date
+        const expiresin = new Date();
+        expiresin.setHours(expiresin.getHours() + 1);
+        console.log(expiresin);
+        //store random string
+        await client.db("guvi-node-app").collection("password-reset-flow-users").findOneAndUpdate({ Email: Email}, { $set: { resetPasswordToken: randomString, resetPasswordExpires: expiresin } });
+        //Close the connection
+        response.send({
+          message: "User exists and password reset mail is sent",
+        })
+    
     }
+})
+
+app.post('/verifyToken',async function (request, response) {
+  const {id,token}=request.body;
+  const userFromDB = await getUserById(id);
+  const currTime = new Date();
+  currTime.setHours(currTime.getHours());
+  console.log(userFromDB)
+  try{
+  if(currTime<=userFromDB.resetPasswordExpires){
+    if(token===userFromDB.resetPasswordToken){
+      response.send({message:"Changing Password Approved"});
+    }
+    else{ 
+
+      response.status(400).send({message:"Token not valid"});
+    }
+  }
+  else{
+    response.status(400).send({message:"Time expired"});
+  }
+}
+  catch (error) {
+    response.status(500).send({
+        message: "Something went wrong!"
+    })
+}
+});
+
+app.put('/changePassword',async function (request, response) {
+  const {Password,id}=request.body;
+  console.log(Password)
+  // const userFromDB = await getUserById(id);
+  // if(!userFromDB){
+  //   response.status(400).send({message:"Invalid Credential"});
+  // }
+  // else
+  try{ 
+    // check password
+    const hashedPassword=await generateHashedPassword(Password);
+    console.log(hashedPassword)
+    await client.db("guvi-node-app").collection("password-reset-flow-users").findOneAndUpdate({ _id: ObjectId(id)}, { $set: { Password: hashedPassword}});
+    //db.users.insertOne(data);
+    response.send({message:"Password updated successfully"});
+  }
+  catch(error){
+    response.send({message:"Unexpected error in password updation"});
+  }
 })
