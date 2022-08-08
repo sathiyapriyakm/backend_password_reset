@@ -15,10 +15,7 @@ const PORT= process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 
-
-
 const MONGO_URL=process.env.MONGO_URL;
-
 async function createConnection(){
     const client=new MongoClient(MONGO_URL);
     await client.connect();
