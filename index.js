@@ -180,28 +180,38 @@ app.put('/changePassword',async function (request, response) {
 })
 
 app.post('/contactMe',async function (request, response) {
-    const { name, email, subject, message } = request.body;
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
+  const { name, email, subject, message } = request.body;
+  const userFromDB = await getUserByEmail(Email);
+
+      //Create Transporter
+      let transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+              user: process.env.MAIL_USERNAME,
+              pass: process.env.MAIL_PASSWORD,
+          }
+      });
+      //Mail options
+      let mailOptions = {
+          from: email,
+          to: 'sathiyapriya.km@getUserByEmail.com',
+          subject: subject,
+          html: `<h4>Hi,</h4><br><p>${message}</p><br>`
+      }
+      //Send mail
+      transporter.sendMail(mailOptions, (err, data) => {
+          if (err) {
+              console.log(err);
+          }
+          else {
+              console.log('email sent successfully')
+          }
+      })
+      
+      //Close the connection
+      response.send({
+        message: "Email is sent",
+      })
   
-    const mailOptions = {
-      to: process.env.MAIL_USERNAME_CONTACT,
-      from: email,
-      subject: "Portfolio site contact mail",
-      html: `<h1>New Contact from Portfolio site</h1>
-            <h2>User name : ${name}</h2>
-            <h2>User email : ${email}</h2>
-            <h2>subject : ${subject}</h2>
-            <h2>Message : ${message}</h2>
-            </div>`,
-    };
   
-    transporter.sendMail(mailOptions);
-  
-    response.status(200).send({ success: true, message: "Mail Sent successfully" });
 })
