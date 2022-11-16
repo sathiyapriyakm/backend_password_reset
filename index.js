@@ -209,9 +209,7 @@ app.post('/contactMe',async function (request, response) {
       })
       
       //Close the connection
-      response.send({
-        message: "Email is sent",
-      })
+      response.status(200).send({ success: true, message: "Mail Sent successfully" });
   
   
 })
