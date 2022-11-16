@@ -195,9 +195,9 @@ app.post('/contactMe',async function (request, response) {
           from: email,
           to: 'sathiyapriya.km@gmail.com',
           subject: subject,
-          html: `<h4>Hi, </h4><br>
-          <p>I am ${name} </p><br>
-          <p>My mailId is: ${email}</p><br>
+          html: `<h4>Hi, </h4>
+          <p>I am ${name} </p>
+          <p>My mailId is: ${email}</p>
           <p> ${message} </p>`
       }
       //Send mail
