@@ -37,7 +37,7 @@ async function generateHashedPassword(password){
 
 
 app.get('/', function (req, res) {
-  res.send('Hello, Welcome to the APP')
+  res.send('Hello, Welcome to the Password Reset APP')
 })
 
 
@@ -177,4 +177,31 @@ app.put('/changePassword',async function (request, response) {
   catch(error){
     response.send({message:"Unexpected error in password updation"});
   }
+})
+
+app.post('/contactMe',async function (request, response) {
+    const { name, email, subject, message } = request.body;
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USERNAME,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
+  
+    const mailOptions = {
+      to: process.env.MAIL_USERNAME_CONTACT,
+      from: email,
+      subject: "Portfolio site contact mail",
+      html: `<h1>New Contact from Portfolio site</h1>
+            <h2>User name : ${name}</h2>
+            <h2>User email : ${email}</h2>
+            <h2>subject : ${subject}</h2>
+            <h2>Message : ${message}</h2>
+            </div>`,
+    };
+  
+    transporter.sendMail(mailOptions);
+  
+    response.status(200).send({ success: true, message: "Mail Sent successfully" });
 })
