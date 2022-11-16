@@ -181,7 +181,6 @@ app.put('/changePassword',async function (request, response) {
 
 app.post('/contactMe',async function (request, response) {
   const { name, email, subject, message } = request.body;
-  const userFromDB = await getUserByEmail(Email);
 
       //Create Transporter
       let transporter = nodemailer.createTransport({
