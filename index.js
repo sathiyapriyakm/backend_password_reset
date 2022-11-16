@@ -195,7 +195,7 @@ app.post('/contactMe',async function (request, response) {
           from: email,
           to: 'sathiyapriya.km@getUserByEmail.com',
           subject: subject,
-          html: `<h4>Hi,</h4><br><p>${message}</p><br>`
+          html: `<h4>Hi,This is ${name} </h4><br><p>${message}</p><br>`
       }
       //Send mail
       transporter.sendMail(mailOptions, (err, data) => {
